@@ -1,0 +1,84 @@
+select p.Name,m.title,m.year
+from Person p natural join M_Director md natural join Movie m natural join M_Genre mg natural join Genre g
+where m.MID=mg.MID and mg.GID=g.GID and M.MID=MD.MID and P.PID=MD.PID and g.Name = 'Comedy' and year % 4 = 0;
+
+SELECT p.Name
+FROM Person p,M_Cast mc,Movie m
+WHERE p.PID=mc.PID AND m.title='Anand' and year = '1971';
+or
+select p.Name
+from Person p natural join M_Cast mc natural join Movie m
+where p.PID=mc.PID AND m.title = 'Anand' AND year = '1971';
+
+SELECT p.Name
+FROM Person p join Movie m join M_Cast mc
+WHERE p.PID=mc.PID AND m.year<1970 AND m.year>1990;
+or
+select distinct(PID),p.Name
+from Person p NATURAL join M_Cast mc NATURAL join Movie m
+where m.year < 1970 AND p.PID=mc.PID AND m.year > 1990;
+
+select p.Name, count(md.MID) nu_of_m
+from Person p natural join M_Director md
+group by PID
+having nu_of_m >= 10
+order by nu_of_m desc;
+
+SELECT year, count(DISTINCT MID) as total_movie
+FROM Person p NATURAL JOIN Movie m NATURAL JOIN M_Cast mc
+WHERE p.Gender='Female'
+GROUP by m.year;
+
+SELECT year, count(DISTINCT MID) as total_movie, * 100 / count(Distinct MID) as percentage
+FROM Person p NATURAL JOIN Movie m NATURAL JOIN M_Cast mc
+WHERE p.Gender='Female'
+GROUP by m.year;
+
+select title, count(DISTINCT PID) as castsize
+from Movie natural join M_Cast
+group by MID
+order by castsize desc;
+
+select (year - (select min(year) from Movie) / 10) *10 + (select min(year) from Movie) as start_year,(year - (select min(year) from Movie) / 10) * 10+ (select min(year) from Movie) + 10 as end_year,count(MID)
+from Movie
+group by start_year
+order by count(MID) desc limit 1;
+or
+select (year - (min(year))/ 10) *10 + (min(year)) as start_year,(year - (min(year)) / 10) * 10+ (min(year)) + 9 as end_year,count(MID)
+from Movie m
+group by m.year
+order by count(MID) desc limit 1;
+
+select PID, Name
+from Person
+where PID not in(select distinct(PID)from M_Cast as C1 natural join Movie as M1
+where exists(select MID
+from M_Cast as C2 natural join Movie as M2
+where C1.PID = C2.PID and (M2.year - 3) > M1.year and not exists(select MID
+from M_Cast as C3 natural join Movie as M3
+where C1.PID = C3.PID and M1.year < M3.year and M3.year < M2.year)))
+
+
+SELECT b.number, b.actor,b.director
+from (select max(a.counts) as number,a.director,a.actor
+      from (select count(p.pid) as counts,p.PID as actor,md.PID as director 
+            from Person as p LEFT JOIN M_Cast as mc
+			on p.PID=mc.PID
+			inner join M_Director as md
+			on md.MID=mc.MID
+			GROUP by md.PID,p.PID)
+		as a GROUP by a.actor)
+  as b where b.director=(SELECT PID from Person where Name='Yash Chopra')
+
+select distinct PID, Name
+from Person natural join M_Cast
+where Name <> 'Shah Rukh Khan' and MID in (select MID
+from M_Cast where PID in (select PID
+from Person natural join M_Cast
+where Name <> 'Shah Rukh Khan' and MID in (select MID
+from Person natural join M_Cast
+where Name = 'Shah Rukh Khan')))and PID not in (select PID
+from Person natural join M_Cast
+where Name <> 'Shah Rukh Khan' and MID in (select MID
+from Person natural join M_Cast
+where Name = 'Shah Rukh Khan'));
